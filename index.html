@@ -166,9 +166,35 @@
     
 
 
- 
+    <!-- enable saving of the dashboard-->
+    <script type="text/javascript" src="js/saveAll.js"></script>
+    <!-- enable editing of the campaign spend section of the marketing table-->
+    <script type="text/javascript" src="js/editRevenue.js"></script>
+    <!-- enable linking out to mixpanel reports -->
+    <script type="text/javascript" src="js/linkOuts.js"></script>
+    <!-- helper functions includes addCommas, and graphValues-->
+    <script type="text/javascript" src="js/helperFunctions.js"></script>
+    <!-- web only top events query jql -->
+    <script id="jql-top-web-events">
+      var d = new Date();
+      d.setMonth(d.getMonth() - 1);
+      var aMonthAgo = new Date(d).toISOString().split("T")[0]
+      var today = new Date().toISOString().split("T")[0]
 
-
+      function main() {
+        return Events({
+          from_date: aMonthAgo,
+          to_date:   today
+        })
+        .filter(function(item){
+          if(item.properties.mp_lib === 'web'){
+            return item
+          }
+        })
+        .groupBy(["name"], mixpanel.reducer.count())
+        .reduce(mixpanel.reducer.top(5));
+      }
+    </script>
     <!-- dau jql script -->
     <script id="jql-dau-active-users">
       /* ========================================================
@@ -208,7 +234,6 @@
         return new Date(event.time).toISOString().substr(0, 10);
       }
     </script>
-    
     <!-- jql script for MAU this month, used in marketingTable.js -->
     <script id="monthly-active-users">
       /* ========================================================
@@ -303,7 +328,6 @@
           ))
       }
     </script>
-    
     <!-- jql for events by campaign by user -->
     <script type="text/javascript" id="events-per-user-per-campaign-jql">
       var today = new Date().toISOString().split('T')[0]
@@ -338,7 +362,6 @@
         return event.properties.utm_campaign
       }
     </script>
-    
     <!-- jql for events by user by user -->
     <script type="text/javascript" id="events-per-user-by-day-jql">
       var today = new Date().toISOString().split('T')[0]
@@ -399,7 +422,6 @@
         return event.properties.utm_campaign
       }
     </script>
-    
     <!--jql query to get saved campaign spends-->
     <script type="text/javascript" id="saved-campaign-spend">
       var today = new Date().toISOString().split('T')[0]
@@ -414,5 +436,21 @@
         })
       }
     </script>
+    <!-- dua graphing-->
+    <script type="text/javascript" src="js/dauGraphing.js"></script>
+    <!-- mau graphing -->
+    <script type="text/javascript" src="js/mauGraphing.js"></script>
+    <!-- revenue today graphing in header pannel-->
+    <script type="text/javascript" src="js/revenueHeader.js"></script>
+    <!-- marketing table graph -->
+    <script type="text/javascript" src="js/marketingTable.js"></script>
+    <!-- link to avg events per user per campaign per day graphing -->
+    <script type="text/javascript" src="js/avgEventsPerCampaingGraphing.js"></script>
+    <!-- avg events per user per day graphing -->
+    <script type="text/javascript" src="js/avgEventsPerUserPerDay.js"></script>
+    <!-- link to enable changing of events in table -->
+    <script type="text/javascript" src="js/tableEdit.js"></script>
+    <!-- bounce rates by campaign graphing-->
+    <script type="text/javascript" src="js/bounceRatesByCampaign.js"></script>
   </body>
 </html>
