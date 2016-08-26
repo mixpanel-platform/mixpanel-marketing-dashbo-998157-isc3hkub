@@ -48,7 +48,6 @@
   </head>
 
   <body class="mixpanel-platform-body">
-    <!-- top metrics row -->
     <div class="container-fluid" id='pannel-container'>
       <div class="row">
           <div class="col-sm-3 col-sm-6">
@@ -59,7 +58,7 @@
                               <i class="fa fa-users fa-4x" aria-hidden="true"></i>
                           </div>
                           <div class="col-xs-9 text-right">
-                              <div class="huge" id="dau-header">100</div>
+                              <div class="huge" id="dau-header">0</div>
                               <div class="panel-text">Daily Active Users Today</div>
                           </div>
                       </div>
@@ -141,9 +140,155 @@
           </div>
       </div>
     </div>
-
-  
-
+    <div class="container-fluid p-t-2" id='tables-and-charts'>
+      <div class='row' id='headers'>
+        <div class="col-sm-6">
+          <h4 class="text-center  text-muted" id="dau-chart-header" style="display: none"><u>Daily Active Users</u></h4>
+        </div>
+        <div class="col-sm-6">
+          <h4 class="text-center text-muted" id="mau-chart-header" style="display: none"><u>Monthly Active Users</u></h4>
+        </div>
+      </div>
+      <div class='row'>
+        <div class="col-sm-6">
+          <div id='dau-chart'></div>
+        </div>
+        <div class="col-sm-6">
+          <div id='mau-chart'></div>
+        </div>
+      </div>
+      <!-- title header button row -->
+      <div class="row">
+        <div class="col-sm-12">
+          <h4 class="text-center text-muted" id="marketing-table-header" style="display: none;"><u>Campaign ROI</u></h4>
+        </div>
+        <div class="row" id="loading-container">
+          <div class="center-block text-center">
+            <i class="fa fa-spinner fa-pulse fa-3x fa-fw"></i>
+            <span class="sr-only">Loading...</span>
+          </div>
+        </div>
+      </div>
+      <!-- export button row -->
+      <div class="row">
+        <div class="col-sm-12">
+          <button class="export-button clearfix pull-right" id="export" data-export="export" style="display:none;">Export Table</button>
+        </div>
+      </div><!--  end export button row -->
+      <div class="row" id="table">   <!-- start marketing table -->
+        <div class="col-sm-12 m-t-4 clearfix marketing-div">
+          <table class="table table-bordered tablesorter" id="marketing-table">
+          </table>
+        </div>
+      </div> <!-- end marketing table-->
+      <div class="row">  <!-- start of edit table and page selectors -->
+        <div class="clearfix col-sm-12" id='selectors'>  <!-- start of table editor selectors -->
+          <div class="clearfix pull-left" id="table-edit-section"style="padding-top: 11px">
+            <div id="table-edit"  style="display:none"><button class="btn edit-table-btn" id="table-edit-button">Edit Table Events</button></div>
+            <div class="col-sm-6 text-uppercase text-muted " id="selector-text" style="display:none"><u><b>Event to remove:</b></u></div>
+            <div class="col-sm-6" id="new-event" style="display:none;"></div>
+          </div> <!-- end of table editor selectors -->
+          <div class="dropdown" style="display: none">   <!-- start pager controls -->
+            <div id="pager" class="pager clearfix pull-right">
+              <form id="pager-controls">
+                <i class="first table-control fa fa-fast-backward" aria-hidden="true" id="table-controls" style="padding-top: 2px;"></i>
+                <i class="prev fa fa-step-backward" aria-hidden="true" id="table-controls"></i>
+                <span class="pagedisplay"></span> <!-- this can be any element, including an input -->
+                <i class="next fa fa-step-forward" aria-hidden="true" id="table-controls"></i>
+                <i class="last fa fa-fast-forward" aria-hidden="true" id="table-controls"></i>
+                <select class="pagesize mp-button">
+                  <option value="5">5</option>
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="30">30</option>
+                  <option value="50">50</option>
+                  <option value="all">All Rows</option>
+                </select>
+              </form>
+            </div>
+          </div> <!-- end pager controls -->
+        </div> <!-- end of edit table and page selectors -->
+      </div> <!-- end of edit table and page selectors container row-->
+      <div class="row" id="headers">
+          <div class="col-sm-12">
+            <h4 class="text-center text-muted" id="avg-campaign-header" style="display: none;"><u>Avg. Events Per User By Campaign</u></h4>
+          </div>
+        </div>
+      <div class="row">
+          <div class="col-sm-12">
+            <div id='events-per-user-per-campaign-chart'></div>
+          </div>
+        </div>
+      <div class="row" id="headers">
+          <div class="col-sm-12">
+            <h4 class="text-center text-muted" id="avg-per-user-header" style="display: none;"><u>Avg. Events Per User</u></h4>
+          </div>
+        </div>
+      <div class="row">
+          <div class="col-sm-12">
+            <div id='avg-events-per-user-per-day-chart'></div>
+          </div>
+        </div>
+      <div class="row" id="headers">
+          <div class="col-sm-12">
+            <h4 class="text-center text-muted" id="bounce-rate-header" style="display: none;"><u>Campaign Bounce Rate</u></h4>
+          </div>
+        </div>
+      <div class="row">
+        <div class="col-sm-12">
+          <div id='campaign-bounce-rate'></div>
+        </div>
+      </div>
+    </div>
+    <!--dialogue modal for entering revenue-->
+    <div class="modal fade" id="revenue-modal"><!--.modal -->
+      <div class="modal-dialog" role="document"><!--.modal-dialog -->
+        <div class="modal-content"><!--.modal-content -->
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="modal-title text-center">Edit Campaign Spend</h4>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted text-uppercase"><b>Campaign Amount: </b><input type="text" name="Enter Campaign spend" id='campaign-spend-input'></p>
+          </div>
+          <div class="modal-footer">
+            <div class="col-xs-6">
+              <p class="text-muted text-center bottom-align-text" style="font-size: 8px"><i>In order for changes to table to be saved you must save the full dashboard at the bottom of the page</i></p>
+            </div>
+            <button type="button" class="btn close-btn" data-dismiss="modal">Close</button>
+            <button type="button" class="btn save-btn" data-dismiss="modal" id="camp-spend-modal-save">Update Spend</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+    <!--dialogue modal for universal saving-->
+    <div class="modal fade" id="save-all-modal"><!--dialogue modal for universal saving-->
+      <div class="modal-dialog" role="document"><!--.modal-dialog -->
+        <div class="modal-content"><!--.modal-content -->
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+            <h4 class="modal-title text-center">Save Dashboard</h4>
+          </div>
+          <div class="modal-body">
+            <p class="text-muted text-uppercase"><b>Project Token: </b><input type="text" name="Enter Project Token" id='project-token-input'></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn save-btn" data-dismiss="modal" id="save-all-confirm">Save changes</button>
+            <button type="button" class="btn close-btn" data-dismiss="modal">Close</button>
+          </div>
+        </div><!-- /.modal-content -->
+      </div><!-- /.modal-dialog -->
+    </div><!--end dialogue modal for universal saving-->
+    <br>
+    <div class="row">
+      <div class="col-sm-12 m-t-2">
+        <button type="button" name="button" class="mp-button" id="save-all">Save</button>
+      </div>
+    </div>
     <!-- space for some global variables -->
     <script type="text/javascript">
       //set a global object to store all graphing data to be sent later
