@@ -123,7 +123,7 @@
                           </div>
                           <div class="col-xs-9 text-right">
                               <div class="huge" id="avg-events">0</div>
-                              <div class="panel-text">Daily Events Per User</div>
+                              <div class="panel-text">Monthly Events Per User</div>
                           </div>
                       </div>
                   </div>
@@ -153,7 +153,7 @@
      
       
       <!-- start marketing table -->
-      <table>
+      <table id="marketing-table">
         <tr>
           <th>Campaign</th>
           <th>New Users</th>
@@ -174,40 +174,144 @@
         from_date: params.from,
         to_date: params.to
       })
+      .groupByUser(function(state, events){
+        state = state || {
+          'event_count':0,
+          'account_created':false
+        };
+        for(var i = 0; i < events.length; i++){
+          state.event_count++;
+          if (events[i].name == "Account Created") {
+            state.account_created = true;
+          }
+        }
+        return state;
+      })
       //.reduce(mixpanel.reducer.count());
     }
     </script>
 
     <script id="table-jql">
     /* JQL Query for table */
-
+    var session_event = "Browse";
+    function main() {
+      return join (
+        Events({
+          from_date: params.from,
+          to_date: params.to
+        }),
+        People())
+      .filter(function(tuple) {
+        return tuple.user && tuple.event;
+      })
+      .filter(function(tuple){
+        return tuple.event.properties["Campaign Name"] != "Organic";
+      })
+      .groupBy(["event.properties.Campaign Name"], function(accums, tups){
+        var returnObj = {
+          'new_users':0,
+          'sessions':0,
+          'users':{},
+          'revenue':0
+        };
+        for(var i = 0; i < tups.length; i++){
+          if(tups[i].event.name == "Account Created"){
+            returnObj.new_users++;
+          }
+          if(tups[i].event.name == session_event){
+            returnObj.sessions++;
+          }
+          if(!(tups[i].user.distinct_id in returnObj.users)){
+            returnObj.users[tups[i].user.distinct_id] = tups[i].user;
+          }
+          if(tups[i].event.name == "Complete Purchase"){
+            returnObj.revenue += tups[i].event.properties['Total Charge'];
+          }
+        }
+        for(var c = 0; c < accums.length; c++){
+          returnObj.new_users += accums[c].new_users;
+          returnObj.sessions += accums[c].sessions;
+          returnObj.revenue += accums[c].revenue;
+          for(user in accums[c].users){
+            returnObj.users[user] = accums[c].users[user];
+          }
+        }
+        return returnObj;
+      })
+      .map(function(element){
+        var total_ltv = 0;
+        var total_users = 0;
+        for(var user in element.value.users){
+          if("Life Time Revenue" in element.value.users[user].properties){
+            total_ltv += element.value.users[user].properties['Life Time Revenue'];
+            total_users++;
+          }
+        }
+        return {
+          'campaign':element.key[0],
+          'new_users':element.value.new_users,
+          'sessions':element.value.sessions / total_users,  // TODO: this is sort of janky becuase total users is only the total number of users who have a LTR prop ... want to fix
+          'revenue':element.value.revenue,
+          'ltv_per_user': total_ltv / total_users
+        };
+      });
+    }
     </script>
 
     <script>
-    /* New User Query */
-    // Goal count
-    var monthly_new_user_goal = 0;
-    MP.api.segment('Account Created', null, {from: moment().subtract(1, 'months'), to:moment(), unit: 'month', type:'unique'}).done(function(results){
-        var total = 0;
-        _.forEach(results.json['Account Created'], function(result){
-        total += result;
-      });
-        document.getElementById("new-user-header").innerHTML = total;
-    });
 
-    /* Monthly active users */
+    /* Monthly active users & new users */
     var jql1 = $('#mau-jql').html();
     jql1 = $.trim(jql1);
     MP.api.jql(jql1, {"to": moment().format('YYYY-MM-DD'), "from": moment().subtract(1, 'months').format('YYYY-MM-DD')}).done(function(results){
-      console.log("**** JQL RESULTS ****");
-      console.log(results);
+      // console.log("**** JQL RESULTS ****");
+      // console.log(results);
+      var new_user_total = 0;
+      for(var i = 0; i < results.length; i++){
+        if(results[i].value.account_created){
+          new_user_total++;
+        }
+      }
+      document.getElementById("new-user-header").innerHTML = new_user_total;
+      document.getElementById("mau-header").innerHTML = results.length;
+
+      /* Calculate monthly events / user */
+      var total_events = 0;
+      for(var i = 0; i < results.length; i++){
+        total_events += results[i].value.event_count;
+      }
+      var meu = total_events / results.length;
+      document.getElementById("avg-events").innerHTML = (total_events / results.length).toFixed(2);
     });
 
     /* Revenue today */ 
-
-    /* Daily Events / user */
+    MP.api.segment('Complete Purchase', 'number(properties["Total Charge"])', {from: moment().subtract(1, 'days'), to:moment(), method:'sum'}).done(function(results){
+      var total_rev = 0;
+      for(var date in results.results){
+        total_rev+=results.results.date;
+      }
+      document.getElementById("revenue-header").innerHTML = "$"+total_rev;
+    });
 
     /* Table JQL query and population */
+    var jql2 = $('#table-jql').html();
+    jql2 = $.trim(jql2);
+    MP.api.jql(jql2, {"to": moment().format('YYYY-MM-DD'), "from": moment().subtract(1, 'months').format('YYYY-MM-DD')}).done(function(results){
+      console.log(results);
+
+      // Get table
+      var table = document.getElementById("marketing-table");
+      for(var i = 0; i < results.length; i++){
+        // Create new row for each campaign 
+        var row = table.insertRow(i+1);
+        row.id = "campaign-row-"+i;
+        row.insertCell(0).innerHTML = results[i].campaign;
+        row.insertCell(1).innerHTML = results[i].new_users;
+        row.insertCell(2).innerHTML = results[i].sessions.toFixed(2);
+        row.insertCell(3).innerHTML = results[i].ltv_per_user.toFixed(2);
+        row.insertCell(4).innerHTML = "$"+results[i].revenue;
+      }
+    });
 
     </script>
 
