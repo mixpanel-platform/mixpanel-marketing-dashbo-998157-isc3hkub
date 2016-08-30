@@ -10,6 +10,9 @@
     <link rel="stylesheet" type="text/css" href="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.css">
     <script src="https://cdn.mxpnl.com/libs/mixpanel-platform/build/mixpanel-platform.v0.latest.min.js"></script> <!--/mixpanel platform -->
 
+    <!-- jQuery -->
+    <script src="jquery-1.12.4.min.js"></script>
+
     <!--tether for tooltips-->
     <script src="//cdnjs.cloudflare.com/ajax/libs/tether/1.3.1/js/tether.min.js"></script>
 
@@ -53,8 +56,8 @@
                               <i class="fa fa-users fa-4x" aria-hidden="true"></i>
                           </div>
                           <div class="col-xs-9 text-right">
-                              <div class="huge" id="dau-header">0</div>
-                              <div class="panel-text">Daily Active Users Today</div>
+                              <div class="huge" id="new-user-header">0</div>
+                              <div class="panel-text">New Users This Month</div>
                           </div>
                       </div>
                   </div>
@@ -152,45 +155,61 @@
       <!-- start marketing table -->
       <table>
         <tr>
-          <th>Company</th>
-          <th>Contact</th>
-          <th>Country</th>
-        </tr>
-        <tr>
-          <td>Alfreds Futterkiste</td>
-          <td>Maria Anders</td>
-          <td>Germany</td>
-        </tr>
-        <tr>
-          <td>Centro comercial Moctezuma</td>
-          <td>Francisco Chang</td>
-          <td>Mexico</td>
-        </tr>
-        <tr>
-          <td>Ernst Handel</td>
-          <td>Roland Mendel</td>
-          <td>Austria</td>
-        </tr>
-        <tr>
-          <td>Island Trading</td>
-          <td>Helen Bennett</td>
-          <td>UK</td>
-        </tr>
-        <tr>
-          <td>Laughing Bacchus Winecellars</td>
-          <td>Yoshi Tannamuri</td>
-          <td>Canada</td>
-        </tr>
-        <tr>
-          <td>Magazzini Alimentari Riuniti</td>
-          <td>Giovanni Rovelli</td>
-          <td>Italy</td>
+          <th>Campaign</th>
+          <th>New Users</th>
+          <th>Sessions / User</th>
+          <th>LTV / User</th>
+          <th>Total Revenue</th>
         </tr>
       </table>
       <!-- end marketing table-->
       
      
     </div>
-    
+
+    <script type="text/javascript" id="mau-jql">
+    /* JQL query for mau */ 
+    function main() {
+      return Events({
+        from_date: params.from,
+        to_date: params.to
+      })
+      //.reduce(mixpanel.reducer.count());
+    }
+    </script>
+
+    <script id="table-jql">
+    /* JQL Query for table */
+
+    </script>
+
+    <script>
+    /* New User Query */
+    // Goal count
+    var monthly_new_user_goal = 0;
+    MP.api.segment('Account Created', null, {from: moment().subtract(1, 'months'), to:moment(), unit: 'month', type:'unique'}).done(function(results){
+        var total = 0;
+        _.forEach(results.json['Account Created'], function(result){
+        total += result;
+      });
+        document.getElementById("new-user-header").innerHTML = total;
+    });
+
+    /* Monthly active users */
+    var jql1 = $('#mau-jql').html();
+    jql1 = $.trim(jql1);
+    MP.api.jql(jql1, {"to": moment().format('YYYY-MM-DD'), "from": moment().subtract(1, 'months').format('YYYY-MM-DD')}).done(function(results){
+      console.log("**** JQL RESULTS ****");
+      console.log(results);
+    });
+
+    /* Revenue today */ 
+
+    /* Daily Events / user */
+
+    /* Table JQL query and population */
+
+    </script>
+
   </body>
 </html>
